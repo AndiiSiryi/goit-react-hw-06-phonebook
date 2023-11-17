@@ -1,32 +1,27 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { nanoid } from 'nanoid';
 import css from './ContactForm.module.css';
-import PropTypes from 'prop-types';
 
-export const ContactForm = ({ handleFormSubmit }) => {
+import { useDispatch, useSelector } from 'react-redux';
+import { selectContacts } from 'redux/contacts/contacts-selector';
+import { addContactAction } from 'redux/contacts/contacts-slice';
+
+const ContactForm = ({ addContact }) => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
-  // state = {
-  //   name: '',
-  //   number: '',
-  // };
   const validateName = name => {
     const nameRegex = /^[a-zA-Zа-яА-ЯїіІ'Ї\s]+$/;
     return nameRegex.test(name);
   };
 
-  // validateName(name) {
-  //   const nameRegex = /^[a-zA-Zа-яА-ЯїіІ'Ї\s]+$/;
-  //   return nameRegex.test(name);
-  // }
   const validateNumber = number => {
     const phoneRegex = /^\d{7}$|^\d{3}-\d{2}-\d{2}$/;
     return phoneRegex.test(number);
   };
-  // validateNumber(number) {
-  //   const phoneRegex = /^\d{7}$|^\d{3}-\d{2}-\d{2}$/;
-  //   return phoneRegex.test(number);
-  // }
+
+  const dispatch = useDispatch();
+
   const handleChange = e => {
     const { name, value } = e.target;
     if (name === 'name') {
@@ -35,52 +30,48 @@ export const ContactForm = ({ handleFormSubmit }) => {
       setNumber(value);
     }
   };
-  // handleChange = e => {
-  //   const { name, value } = e.target;
-  //   this.setState({ [name]: value });
-  // };
+
+  const contacts = useSelector(selectContacts);
+
   const handleSubmit = e => {
     e.preventDefault();
+
     if (!validateName(name)) {
-      alert('Name may contain only letters, apostrophe, and spaces');
-      return;
+      return alert('Name may contain only letters, apostrophe, and spaces');
     }
+
     if (!validateNumber(number)) {
-      alert(
+      return alert(
         'The phone number must contain only 7 digits, example: XXXXXXX or XXX-XX-XX.'
       );
-      return;
     }
-    handleFormSubmit(name, number);
+
+    const newContact = {
+      id: nanoid(4),
+      name: name,
+      number: number,
+    };
+
+    if (
+      contacts.some(
+        contact =>
+          contact.name.toLowerCase().trim() === name.toLowerCase().trim()
+      )
+    ) {
+      return alert(`${name} is already in contacts`);
+    }
+    dispatch(addContactAction(newContact));
     setName('');
     setNumber('');
   };
 
-  // handleSubmit = e => {
-  //   e.preventDefault();
-  //   const { name, number } = this.state;
-  //   if (!this.validateName(name)) {
-  //     alert('Name may contain only letters, apostrophe, and spaces');
-  //     return;
-  //   }
-
-  //   if (!this.validateNumber(number)) {
-  //     alert(
-  //       'The phone number must contain only 7 digits, example: XXXXXXX or XXX-XX-XX.'
-  //     );
-  //     return;
-  //   }
-  //   this.props.handleFormSubmit(name, number);
-  //   this.setState({ name: '', number: '' });
-  // };
-
-  //   const { name, number } = this.state;
   return (
     <form className={css.form} onSubmit={handleSubmit}>
       <label className={css.label}>
         Name:
         <input
           className={css.input}
+          id="nameInput"
           type="text"
           name="name"
           value={name}
@@ -92,6 +83,7 @@ export const ContactForm = ({ handleFormSubmit }) => {
         Phone Number:
         <input
           className={css.input}
+          id="numberInput"
           type="tel"
           name="number"
           value={number}
@@ -106,6 +98,4 @@ export const ContactForm = ({ handleFormSubmit }) => {
   );
 };
 
-ContactForm.propTypes = {
-  handleFormSubmit: PropTypes.func.isRequired,
-};
+export default ContactForm;
